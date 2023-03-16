@@ -19,6 +19,8 @@ import my.path : AbsolutePath, Path;
 import my.set;
 import toml : TOMLDocument, TOMLValue;
 
+import code_checker.engine.types : Analyzer;
+
 @safe:
 
 enum AppMode {
@@ -42,7 +44,7 @@ struct ConfigStaticCode {
     Severity severity;
 
     /// Analyzers to use.
-    string[] analyzers = ["clang-tidy"];
+    Analyzer[] analyzers = [Analyzer.clangTidy];
 
     /// Files matching this pattern should not be analyzed.
     string[] fileExcludeFilter;
@@ -246,6 +248,7 @@ void parseCLI(string[] args, ref Config conf) @trusted {
     bool verbose_trace;
     std.getopt.GetoptResult help_info;
     try {
+        Analyzer[] analyzers;
         Progress[] progress;
         bool initConf;
         string database;
@@ -254,7 +257,6 @@ void parseCLI(string[] args, ref Config conf) @trusted {
         string logdir = ".";
         string workdir;
         string[] analyzeFiles;
-        string[] analyzers;
         string[] compileDbs;
 
         // dfmt off
@@ -405,7 +407,13 @@ void loadConfig(ref Config rval, ref TOMLDocument doc) @trusted {
         c.systemConf = v.str.replaceConfigWord.AbsolutePath;
     };
     callbacks["defaults.analyzers"] = (ref Config c, ref TOMLValue v) {
-        c.staticCode.analyzers = v.array.map!"a.str".array;
+        try {
+            import std.conv : to;
+
+            c.staticCode.analyzers = v.array.map!(a => a.str.to!Analyzer).array;
+        } catch (Exception e) {
+            logger.warning(e.msg);
+        }
     };
     callbacks["defaults.database"] = (ref Config c, ref TOMLValue v) {
         c.database = v.str.AbsolutePath;

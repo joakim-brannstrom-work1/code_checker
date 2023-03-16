@@ -23,6 +23,7 @@ import miniorm : Miniorm, TableName, buildSchema, ColumnParam, TableForeignKey, 
 import my.path : AbsolutePath;
 
 public import code_checker.types;
+public import code_checker.engine.types : Analyzer;
 
 /** Initialize or open an existing database.
  *
@@ -76,7 +77,7 @@ do {
     try {
         if (isOldDb
                 && spinSql!(() => getSchemaVersion(db))(10.dur!"seconds") >= tbl
-                .latestSchemaVersion)
+                    .latestSchemaVersion)
             return db;
     } catch (Exception e) {
         logger.info("The database is probably locked. Will keep trying to open for ", longTimeout);
@@ -248,7 +249,7 @@ struct FilesTbl {
 immutable filesStatusTable = "files_status";
 @TableName(filesStatusTable)
 @TableForeignKey("file_id", KeyRef("files(id)"), KeyParam("ON DELETE CASCADE"))
-@TableConstraint("unique_ UNIQUE (file_id)")
+@TableConstraint("unique_ UNIQUE (file_id, analyzer)")
 struct FilesStatusTable {
     long id;
 
@@ -256,6 +257,8 @@ struct FilesStatusTable {
     long fileId;
 
     FileStatus status;
+
+    Analyzer analyzer;
 }
 
 immutable depFileTable = "dependency_file";
@@ -351,6 +354,23 @@ void upgradeV3(ref Miniorm db) {
 }
 
 void upgradeV4(ref Miniorm db) {
+    @TableName(filesStatusTable)
+    @TableForeignKey("file_id", KeyRef("files(id)"), KeyParam("ON DELETE CASCADE"))
+    @TableConstraint("unique_ UNIQUE (file_id)")
+    struct FilesStatusTable {
+        long id;
+
+        @ColumnName("file_id")
+        long fileId;
+
+        FileStatus status;
+    }
+
+    db.run(buildSchema!FilesStatusTable);
+}
+
+void upgradeV5(ref Miniorm db) {
+    db.run("DROP TABLE " ~ filesStatusTable);
     db.run(buildSchema!FilesStatusTable);
 }
 

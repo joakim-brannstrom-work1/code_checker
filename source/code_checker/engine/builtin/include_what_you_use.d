@@ -30,12 +30,12 @@ class IncludeWhatYouUse : BaseFixture {
         string[] iwyuArgs;
     }
 
-    override string name() {
-        return "iwyu";
+    override Analyzer name() {
+        return Analyzer.includeWhatYouUse;
     }
 
     override string explain() {
-        return "using iwyu (include what you use)";
+        return "using include what you use";
     }
 
     /// The environment the analyzers execute in.

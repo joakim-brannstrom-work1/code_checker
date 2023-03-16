@@ -12,11 +12,16 @@ public import code_checker.cli : Config;
 
 @safe:
 
+enum Analyzer : ubyte {
+    clangTidy,
+    includeWhatYouUse
+}
+
 /** The base fixture that an analyzer implement
  */
 interface BaseFixture {
     /// the name of the analyser.
-    string name();
+    Analyzer name();
 
     /// Explain what the analyser is.
     string explain();

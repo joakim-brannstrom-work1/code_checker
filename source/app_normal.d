@@ -353,11 +353,14 @@ struct NormalFSM {
             auto trans = db.transaction;
 
             foreach (a; tres.success)
-                db.fileApi.setStatus(relativePath(a, root).Path, FileStatus.normal);
+                db.fileApi.setStatus(relativePath(a, root).Path,
+                    FileStatus.normal, conf.staticCode.analyzers);
             foreach (a; tres.timeout)
-                db.fileApi.setStatus(relativePath(a, root).Path, FileStatus.clangTidyTimeout);
+                db.fileApi.setStatus(relativePath(a, root).Path,
+                    FileStatus.clangTidyTimeout, conf.staticCode.analyzers);
             foreach (a; tres.analyzerFailed)
-                db.fileApi.setStatus(relativePath(a, root).Path, FileStatus.clangTidyFailed);
+                db.fileApi.setStatus(relativePath(a, root).Path,
+                    FileStatus.clangTidyFailed, conf.staticCode.analyzers);
 
             trans.commit;
         });

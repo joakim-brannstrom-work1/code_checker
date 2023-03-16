@@ -134,7 +134,7 @@ struct DbFile {
 
     /// Returns: All files in the database as relative paths.
     Path[] getFiles() @trusted {
-        auto stmt = db.prepare(format!"SELECT path FROM %s"(filesTable));
+        auto stmt = db.prepare("SELECT path FROM " ~ filesTable);
         auto res = stmt.get.execute;
 
         auto app = appender!(Path[]);
@@ -171,14 +171,18 @@ struct DbFile {
         return res.front.peek!FileStatus(0);
     }
 
-    void setStatus(const Path p, const FileStatus status) @trusted {
+    void setStatus(const Path p, const FileStatus status, const Analyzer[] analyzers) @trusted {
         static immutable sql = "INSERT OR REPLACE INTO " ~ filesStatusTable
-            ~ " (file_id,status) SELECT t0.id,:status FROM " ~ filesTable
-            ~ " t0 WHERE t0.path=:path";
+            ~ " (file_id,status,analyzer) SELECT t0.id,:status,:analyzer FROM "
+            ~ filesTable ~ " t0 WHERE t0.path=:path";
         auto stmt = db.prepare(sql);
         stmt.get.bind(":path", p);
         stmt.get.bind(":status", cast(long) status);
-        stmt.get.execute;
+        foreach (analyzer; analyzers) {
+            stmt.get.bind(":analyzer", cast(long) analyzer);
+            stmt.get.execute;
+            stmt.get.reset;
+        }
     }
 }
 
@@ -276,8 +280,7 @@ struct DbDependency {
     /// Returns: all files that a root is dependent on.
     Path[] get(const Path root) @trusted {
         static immutable sql = "SELECT t0.file
-            FROM " ~ depFileTable ~ " t0, "
-            ~ depRootTable ~ " t1, " ~ filesTable ~ " t2
+            FROM " ~ depFileTable ~ " t0, " ~ depRootTable ~ " t1, " ~ filesTable ~ " t2
             WHERE
             t0.id = t1.dep_id AND
             t1.file_id = t2.id AND
@@ -296,8 +299,7 @@ struct DbDependency {
     /// Remove all dependencies that have no relation to a root.
     void cleanup() @trusted {
         db.run(format!"DELETE FROM %1$s
-               WHERE id NOT IN (SELECT dep_id FROM %2$s)"(depFileTable,
-                depRootTable));
+               WHERE id NOT IN (SELECT dep_id FROM %2$s)"(depFileTable, depRootTable));
     }
 }
 

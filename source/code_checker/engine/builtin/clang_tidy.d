@@ -37,8 +37,8 @@ class ClangTidy : BaseFixture {
         string[] tidyArgs;
     }
 
-    override string name() {
-        return "clang-tidy";
+    override Analyzer name() {
+        return Analyzer.clangTidy;
     }
 
     override string explain() {

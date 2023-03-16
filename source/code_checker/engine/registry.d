@@ -68,7 +68,7 @@ struct Registry {
  *
  * Returns: The total status of running the analyzers.
  */
-TotalResult execute(Environment env, string[] analysers, ref Registry reg) @trusted {
+TotalResult execute(Environment env, Analyzer[] analysers, ref Registry reg) @trusted {
     import std.algorithm;
     import std.range;
     import my.set : toSet;

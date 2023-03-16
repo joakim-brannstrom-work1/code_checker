@@ -3,8 +3,8 @@
 severity = "style"
 
 # analysers to run.
-# Available are: ["clang-tidy", "iwyu"]
-# analyzers = ["clang-tidy"]
+# Available are: ["clangTidy", "includeWhatYouUse"]
+# analyzers = ["clangTidy"]
 
 # database file to use. By default code_checker.sqlite3 is used.
 # database = "code_checker.sqlite3"
